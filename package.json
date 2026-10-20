@@ -1,0 +1,31 @@
+{
+  "name": "chordchain-infra",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "npm@11.0.0",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "dev:web": "npm run dev -w apps/web",
+    "dev:scan": "npm run start:dev -w apps/scan-api",
+    "dev:indexer": "npm run start:dev -w apps/indexer-api",
+    "dev:relayer": "npm run start:dev -w apps/gas-relayer",
+    "dev:verifier": "npm run start:dev -w apps/contract-verifier",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "verify:contracts": "node scripts/verify-contracts.js"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "tsx": "^4.23.15",
+    "turbo": "^2.5.5",
+    "typescript": "^5.9.2"
+  }
+}

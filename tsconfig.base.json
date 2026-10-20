@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "declaration": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "baseUrl": ".",
+    "paths": {
+      "@chordscan/database": ["packages/database/src"],
+      "@chordscan/vault": ["packages/vault/src"],
+      "@chordscan/types": ["packages/types/src"],
+      "@chordscan/redis": ["packages/redis/src"],
+      "@chordscan/queue": ["packages/queue/src"]
+    }
+  }
+}

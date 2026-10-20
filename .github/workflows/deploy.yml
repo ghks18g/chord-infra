@@ -1,0 +1,64 @@
+name: ChordScan CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: Build & Verify Monorepo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Turbo Build (5 Apps & Shared Packages)
+        run: npx turbo run build
+
+  deploy-vps:
+    name: Deploy to Production VPS
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Execute Remote SSH Deployment
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER || 'root' }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+            echo "🚀 [CI/CD] Starting ChordScan deployment on VPS..."
+            
+            # 1. Update chordscan source
+            if [ -d "/opt/chord/chordscan" ]; then
+              cd /opt/chord/chordscan
+              git fetch origin main
+              git reset --hard origin/main
+            else
+              echo "Cloning chordscan..."
+              git clone git@github.com:${{ github.repository }}.git /opt/chord/chordscan
+              cd /opt/chord/chordscan
+            fi
+
+            # 2. Rebuild and restart microservices orchestrator
+            cd /opt/chord/chord-go/deploy/prod
+            docker compose -f docker-compose.prod.yml up -d --build redis scan-api indexer-api gas-relayer contract-verifier web
+
+            # 3. Service healthchecks
+            echo "🔍 [CI/CD] Verifying service health..."
+            sleep 5
+            docker ps --filter "name=chordscan" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+            
+            echo "✅ [CI/CD] Deployment successfully completed!"

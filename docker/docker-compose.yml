@@ -1,0 +1,43 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: chordscan-postgres
+    environment:
+      POSTGRES_USER: chord
+      POSTGRES_PASSWORD: chordpass
+      POSTGRES_DB: chordscan
+    ports:
+      - "5432:5432"
+    volumes:
+      - chordscan-pgdata:/var/lib/postgresql/data
+    networks:
+      - chordscan-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  redis:
+    image: redis:7-alpine
+    container_name: chordscan-redis
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - chordscan-redisdata:/data
+    networks:
+      - chordscan-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+volumes:
+  chordscan-pgdata:
+  chordscan-redisdata:
+
+networks:
+  chordscan-net:
+    driver: bridge

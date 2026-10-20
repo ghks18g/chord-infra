@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bg-grad-2" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#0E1626" />
+      <stop offset="70%" stop-color="#080C14" />
+      <stop offset="100%" stop-color="#030508" />
+    </radialGradient>
+    <linearGradient id="facet-left" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#1D4ED8" />
+    </linearGradient>
+    <linearGradient id="facet-right" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#60A5FA" />
+      <stop offset="100%" stop-color="#1E3A8A" />
+    </linearGradient>
+    <linearGradient id="facet-bottom" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#2563EB" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+    <linearGradient id="inner-core" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#BAE6FD" />
+      <stop offset="100%" stop-color="#38BDF8" />
+    </linearGradient>
+    <filter id="glow-2" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="10" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="512" height="512" rx="112" fill="url(#bg-grad-2)" />
+  <rect width="510" height="510" x="1" y="1" rx="111" fill="none" stroke="#38BDF8" stroke-opacity="0.12" stroke-width="2" />
+
+  <!-- Harmonic Orbital Waves (3/4 Quorum Resonance Ring) -->
+  <ellipse cx="256" cy="280" rx="190" ry="110" fill="none" stroke="#2563EB" stroke-opacity="0.2" stroke-width="1.5" stroke-dasharray="6 8" />
+  <ellipse cx="256" cy="280" rx="150" ry="85" fill="none" stroke="#38BDF8" stroke-opacity="0.3" stroke-width="1.5" />
+
+  <!-- 4th Node (f=1 Fault Tolerance / Observer Validator) -->
+  <circle cx="256" cy="425" r="9" fill="#1E293B" stroke="#64748B" stroke-width="2" stroke-dasharray="3 3" />
+  <line x1="130" y1="340" x2="256" y2="425" stroke="#475569" stroke-width="1.5" stroke-dasharray="4 4" stroke-opacity="0.5" />
+  <line x1="382" y1="340" x2="256" y2="425" stroke="#475569" stroke-width="1.5" stroke-dasharray="4 4" stroke-opacity="0.5" />
+
+  <!-- 3/4 Quorum Triad Crystalline Body (3 Primaries) -->
+  <!-- Facet Left (Node 1 to Center to Node 2) -->
+  <polygon points="256,105 256,275 130,340" fill="url(#facet-left)" fill-opacity="0.9" />
+  <!-- Facet Right (Node 1 to Node 3 to Center) -->
+  <polygon points="256,105 382,340 256,275" fill="url(#facet-right)" fill-opacity="0.85" />
+  <!-- Facet Bottom (Node 2 to Center to Node 3) -->
+  <polygon points="130,340 256,275 382,340" fill="url(#facet-bottom)" fill-opacity="0.95" />
+
+  <!-- Inner Inverted Prism Core (Sub-second Finality Crystal) -->
+  <polygon points="256,190 193,307 319,307" fill="url(#inner-core)" fill-opacity="0.35" stroke="#BAE6FD" stroke-width="2" filter="url(#glow-2)" />
+
+  <!-- Crystal Edges & Precision Chords -->
+  <line x1="256" y1="105" x2="130" y2="340" stroke="#7DD3FC" stroke-width="3" stroke-linecap="round" />
+  <line x1="130" y1="340" x2="382" y2="340" stroke="#38BDF8" stroke-width="3" stroke-linecap="round" />
+  <line x1="382" y1="340" x2="256" y2="105" stroke="#93C5FD" stroke-width="3" stroke-linecap="round" />
+  <line x1="256" y1="105" x2="256" y2="275" stroke="#BAE6FD" stroke-width="2" />
+  <line x1="130" y1="340" x2="256" y2="275" stroke="#BAE6FD" stroke-width="2" />
+  <line x1="382" y1="340" x2="256" y2="275" stroke="#BAE6FD" stroke-width="2" />
+
+  <!-- 3 Primary Validator Quorum Vertices (Harmonic Nodes) -->
+  <circle cx="256" cy="105" r="14" fill="#0C1322" stroke="#38BDF8" stroke-width="4" filter="url(#glow-2)" />
+  <circle cx="256" cy="105" r="6" fill="#F0F9FF" />
+
+  <circle cx="130" cy="340" r="14" fill="#0C1322" stroke="#38BDF8" stroke-width="4" filter="url(#glow-2)" />
+  <circle cx="130" cy="340" r="6" fill="#F0F9FF" />
+
+  <circle cx="382" cy="340" r="14" fill="#0C1322" stroke="#38BDF8" stroke-width="4" filter="url(#glow-2)" />
+  <circle cx="382" cy="340" r="6" fill="#F0F9FF" />
+
+  <!-- Central Intersecting Quorum Pivot -->
+  <circle cx="256" cy="275" r="7" fill="#38BDF8" filter="url(#glow-2)" />
+</svg>

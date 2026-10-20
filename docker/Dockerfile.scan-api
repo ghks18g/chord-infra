@@ -1,0 +1,28 @@
+FROM node:22-alpine AS builder
+
+WORKDIR /app
+
+RUN apk add --no-cache python3 make g++ git
+
+COPY package.json package-lock.json turbo.json tsconfig*.json ./
+COPY packages/ ./packages/
+COPY apps/ ./apps/
+
+RUN npm ci
+RUN npx turbo run build --filter=@chordscan/scan-api...
+
+FROM node:22-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=3002
+
+COPY --from=builder /app/package.json /app/package-lock.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages ./packages
+COPY --from=builder /app/apps/scan-api ./apps/scan-api
+
+EXPOSE 3002
+
+CMD ["node", "apps/scan-api/dist/apps/scan-api/src/main.js"]
