@@ -89,8 +89,6 @@ export default function StatisticsPage() {
         <div className="flex items-center gap-2 text-xs font-mono text-slate-500 dark:text-slate-400">
           <Link href="/" className="hover:text-sky-500">Home</Link>
           <span>/</span>
-          <span className="text-slate-700 dark:text-slate-300">Analytics</span>
-          <span>/</span>
           <span className="text-sky-600 dark:text-sky-400 font-semibold">Statistics</span>
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
