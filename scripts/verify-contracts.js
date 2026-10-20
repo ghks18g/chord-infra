@@ -34,6 +34,20 @@ async function main() {
       abi: JSON.stringify(faucetArtifact.abi),
       compiler: 'v0.8.20+commit.a1b79de6',
     },
+    {
+      name: 'ChordForwarder',
+      address: '0x34ec2b8950c43c126d8e7f57dd67d3f134ea1933',
+      source: forwarderSource,
+      abi: JSON.stringify(forwarderArtifact.abi),
+      compiler: 'v0.8.20+commit.a1b79de6',
+    },
+    {
+      name: 'ChordMultiSig',
+      address: '0x8f9d82461767c4ff6a0fcf9f2c45df00f79a6f6e',
+      source: multiSigSource,
+      abi: JSON.stringify(multiSigArtifact.abi),
+      compiler: 'v0.8.20+commit.a1b79de6',
+    },
   ];
 
   let sqlStatements = '';
