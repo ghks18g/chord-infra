@@ -5,6 +5,10 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+concurrency:
+  group: production-vps-deployment
+  cancel-in-progress: false
+
 jobs:
   build-and-test:
     name: Build & Verify Monorepo
@@ -57,7 +61,7 @@ jobs:
 
             # 2. Rebuild and restart microservices orchestrator
             cd /opt/chord/chord-go/deploy/prod
-            docker compose -f docker-compose.prod.yml up -d --build redis scan-api indexer-api gas-relayer contract-verifier web
+            docker compose -f docker-compose.prod.yml up -d --build --remove-orphans redis scan-api indexer-api gas-relayer contract-verifier web
 
             # 3. Clean up legacy containers & dangling images
             docker image prune -f
