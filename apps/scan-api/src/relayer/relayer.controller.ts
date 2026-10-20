@@ -113,15 +113,17 @@ export class RelayerController {
 
   @Get('nonce/:address')
   async getNonce(@Param('address') address: string) {
-    if (!ethers.isAddress(address)) {
+    if (!address || !ethers.isAddress(address.toLowerCase())) {
       throw new BadRequestException(`Invalid Ethereum address: ${address}`);
     }
+
+    const cleanAddress = ethers.getAddress(address.toLowerCase());
 
     try {
       const forwarderInterface = new ethers.Interface([
         'function getNonce(address from) view returns (uint256)',
       ]);
-      const data = forwarderInterface.encodeFunctionData('getNonce', [address]);
+      const data = forwarderInterface.encodeFunctionData('getNonce', [cleanAddress]);
 
       const res = await fetch(this.rpcUrl, {
         method: 'POST',
@@ -154,15 +156,15 @@ export class RelayerController {
 
       return {
         success: true,
-        address: ethers.getAddress(address),
+        address: cleanAddress,
         nonce,
       };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      this.logger.warn(`Failed to fetch on-chain nonce for ${address}: ${msg}, defaulting to 0`);
+      this.logger.warn(`Failed to fetch on-chain nonce for ${cleanAddress}: ${msg}, defaulting to 0`);
       return {
         success: true,
-        address: ethers.getAddress(address),
+        address: cleanAddress,
         nonce: 0,
       };
     }
