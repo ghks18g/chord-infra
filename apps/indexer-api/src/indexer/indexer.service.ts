@@ -101,19 +101,26 @@ export class IndexerService implements OnModuleInit {
     }
   }
 
+  private isSyncing = false;
+
   private startPolling() {
     this.polling = true;
     setInterval(async () => {
+      if (this.isSyncing) return;
+      this.isSyncing = true;
       try {
         await this.syncLatestBlocks();
       } catch (err: any) {
         this.logger.error(`[Indexer] Sync error: ${err.message}`);
+      } finally {
+        this.isSyncing = false;
       }
     }, 1000);
   }
 
   async syncLatestBlocks(): Promise<void> {
     let latestIndexedHeight = await this.blockRepo.getLatestHeight();
+    const totalBlocks = await this.blockRepo.countTotal();
     const rpcHeight = await this.fetchRpcBlockNumber();
 
     if (rpcHeight < latestIndexedHeight) {
@@ -124,11 +131,12 @@ export class IndexerService implements OnModuleInit {
       latestIndexedHeight = 0;
     }
 
-    if (rpcHeight <= latestIndexedHeight) {
+    const startHeight = totalBlocks === 0 ? 0 : latestIndexedHeight + 1;
+    if (startHeight > rpcHeight) {
       return; // Already up to date
     }
 
-    for (let h = latestIndexedHeight + 1; h <= rpcHeight; h++) {
+    for (let h = startHeight; h <= rpcHeight; h++) {
       await this.indexBlockAtHeight(h);
     }
   }
@@ -365,12 +373,18 @@ export class IndexerService implements OnModuleInit {
       }
     }
 
+    const isGenesis = height === 0;
+    const isZeroHash = !b?.hash || b.hash === '0x0000000000000000000000000000000000000000000000000000000000000000';
+    const finalHash = isZeroHash && b?.stateRoot
+      ? b.stateRoot
+      : (b?.hash || `0xchordblock${height.toString().padStart(50, '0')}`);
+
     return {
       height,
-      hash: b?.hash || `0xchordblock${height.toString().padStart(50, '0')}`,
+      hash: finalHash,
       prevHash: b?.parentHash || `0xprev${(height - 1).toString().padStart(54, '0')}`,
       stateRoot: b?.stateRoot || '0x0',
-      proposer: b?.miner || b?.proposer || '0xa983D897D00482FEEf3000Ad2BEEf358B9fA06bC',
+      proposer: isGenesis ? 'Validator #1 (BFT Leader)' : (b?.miner || b?.proposer || '0xa983D897D00482FEEf3000Ad2BEEf358B9fA06bC'),
       timestamp: b?.timestamp ? new Date(parseInt(b.timestamp, 16) * 1000).toISOString() : new Date().toISOString(),
       transactions: txs,
     };

@@ -15,6 +15,7 @@ import { AddressBadge } from '../components/AddressBadge';
 import { TokenValueBadge } from '../components/TokenValueBadge';
 import { GlobalSearch } from '../components/GlobalSearch';
 import { useChordWebSocket } from '../hooks/useChordWebSocket';
+import { useAccount } from 'wagmi';
 
 interface NetworkStats {
   latestBlockHeight: number;
@@ -49,6 +50,8 @@ interface TxItem {
 }
 
 export default function HomePage() {
+  const { address } = useAccount();
+  const myAddr = address?.toLowerCase();
   const [stats, setStats] = useState<NetworkStats | null>(null);
   const [blocks, setBlocks] = useState<BlockItem[]>([]);
   const [txs, setTxs] = useState<TxItem[]>([]);
@@ -384,6 +387,8 @@ export default function HomePage() {
               ) : (
                 txs.map((tx) => {
                   const isNew = highlightedTxs.has(tx.hash.toLowerCase());
+                  const isOut = Boolean(myAddr && tx.from.toLowerCase() === myAddr);
+                  const isIn = Boolean(myAddr && tx.to && tx.to.toLowerCase() === myAddr);
                   return (
                     <div
                       key={tx.hash}
@@ -433,7 +438,10 @@ export default function HomePage() {
                       {/* Right: Value badge & Success */}
                       <div className="text-right shrink-0 font-mono">
                         <span className="inline-block rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 px-2.5 py-0.5 text-xs font-bold shadow-xs">
-                          <TokenValueBadge value={tx.value} />
+                          <TokenValueBadge
+                            value={tx.value}
+                            direction={isOut ? 'OUT' : isIn ? 'IN' : undefined}
+                          />
                         </span>
                         <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1 flex items-center justify-end gap-1">
                           <CheckCircle2 className="h-3 w-3 shrink-0" /> Success

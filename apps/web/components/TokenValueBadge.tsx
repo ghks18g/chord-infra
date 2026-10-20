@@ -6,6 +6,7 @@ interface TokenValueBadgeProps {
   value: string | null | undefined;
   symbol?: string;
   icon?: string;
+  direction?: 'IN' | 'OUT' | null;
   className?: string;
 }
 
@@ -13,6 +14,7 @@ export function TokenValueBadge({
   value,
   symbol = 'CHOR',
   icon = '/logo.svg',
+  direction,
   className = '',
 }: TokenValueBadgeProps) {
   if (value === null || value === undefined) {
@@ -39,12 +41,22 @@ export function TokenValueBadge({
   }
 
   return (
-    <div className={`inline-flex items-center gap-1.5 font-mono ${className}`}>
+    <div className={`inline-flex items-center gap-1.5 font-mono flex-nowrap ${className}`}>
+      {direction === 'IN' && (
+        <span className="shrink-0 inline-block rounded px-1.5 py-0.5 text-[9px] font-black uppercase font-mono bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 dark:text-emerald-400">
+          IN
+        </span>
+      )}
+      {direction === 'OUT' && (
+        <span className="shrink-0 inline-block rounded px-1.5 py-0.5 text-[9px] font-black uppercase font-mono bg-amber-500/10 text-amber-600 border border-amber-500/20 dark:text-amber-400">
+          OUT
+        </span>
+      )}
       {icon && (
         <img
           src={icon}
           alt={symbol}
-          className="h-3.5 w-3.5 shrink-0 object-contain rounded-full"
+          className="h-3.5 w-3.5 shrink-0 object-contain rounded-full border border-sky-500/20 shadow-xs"
         />
       )}
       <span className="font-semibold text-slate-900 dark:text-white">

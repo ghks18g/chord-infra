@@ -1,4 +1,4 @@
-name: ChordScan CI/CD Pipeline
+name: Chord-Infra CI/CD Pipeline
 
 on:
   push:
@@ -39,20 +39,20 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             set -e
-            echo "🚀 [CI/CD] Starting ChordScan deployment on VPS..."
+            echo "🚀 [CI/CD] Starting Chord-Infra deployment on VPS..."
             
-            # 1. Update chordscan source
-            git config --global --add safe.directory /opt/chord/chordscan || true
-            if [ -d "/opt/chord/chordscan/.git" ]; then
-              cd /opt/chord/chordscan
+            # 1. Update chord-infra source
+            git config --global --add safe.directory /opt/chord/chord-infra || true
+            if [ -d "/opt/chord/chord-infra/.git" ]; then
+              cd /opt/chord/chord-infra
               git remote set-url origin https://github.com/${{ github.repository }}.git 2>/dev/null || git remote add origin https://github.com/${{ github.repository }}.git
               git fetch origin main
               git reset --hard origin/main
             else
-              rm -rf /opt/chord/chordscan
-              echo "Cloning chordscan via HTTPS..."
-              git clone https://github.com/${{ github.repository }}.git /opt/chord/chordscan
-              cd /opt/chord/chordscan
+              rm -rf /opt/chord/chord-infra
+              echo "Cloning chord-infra via HTTPS..."
+              git clone https://github.com/${{ github.repository }}.git /opt/chord/chord-infra
+              cd /opt/chord/chord-infra
             fi
 
             # 2. Rebuild and restart microservices orchestrator
@@ -76,5 +76,13 @@ jobs:
             
             # Verify Scan API endpoint
             curl -fsS http://127.0.0.1:3002/api/stats > /dev/null && echo "✅ Scan API Healthy"
+
+            # 6. Auto-seed and verify genesis contracts if chain height is 0
+            CURRENT_HEIGHT=$(curl -s -X POST http://127.0.0.1:8545 -H 'Content-Type: application/json' -d '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' | grep -o '"result":"0x[0-9a-fA-F]*"' | cut -d'"' -f4)
+            if [ "$CURRENT_HEIGHT" = "0x0" ] || [ -z "$CURRENT_HEIGHT" ]; then
+              echo "🌱 [CI/CD] Chain at genesis (Height 0). Seeding genesis contracts (Faucet, Forwarder, MultiSig)..."
+              cd /opt/chord/chord-go && node scripts/setup-genesis-contracts.js || true
+              cd /opt/chord/chord-infra && node scripts/verify-contracts.js || true
+            fi
             
             echo "✅ [CI/CD] Deployment successfully completed!"

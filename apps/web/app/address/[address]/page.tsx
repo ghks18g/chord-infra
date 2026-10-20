@@ -505,18 +505,11 @@ export default function AddressDetailPage({
                           )}
                         </td>
                         <td className="py-2.5 px-3 text-right">
-                          <div className="inline-flex items-center gap-1.5 justify-end">
-                            <span className={`shrink-0 inline-block rounded px-1.5 py-0.5 text-[9px] font-black uppercase font-mono ${
-                              direction === 'IN'
-                                ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 dark:text-emerald-400'
-                                : direction === 'OUT'
-                                ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20 dark:text-amber-400'
-                                : 'bg-slate-500/10 text-slate-600 border border-slate-500/20 dark:text-slate-400'
-                            }`}>
-                              {direction}
-                            </span>
-                            <TokenValueBadge value={tx.value} />
-                          </div>
+                          <TokenValueBadge
+                            value={tx.value}
+                            direction={direction === 'IN' ? 'IN' : direction === 'OUT' ? 'OUT' : undefined}
+                            className="justify-end"
+                          />
                         </td>
                       </tr>
                     );

@@ -330,19 +330,10 @@ export default function TransactionsPage() {
                         )}
                       </td>
                       <td className="py-3.5 px-6">
-                        <div className="inline-flex items-center gap-1.5 flex-nowrap">
-                          {isOut && (
-                            <span className="shrink-0 inline-block rounded px-1.5 py-0.5 text-[9px] font-black uppercase font-mono bg-amber-500/10 text-amber-600 border border-amber-500/20 dark:text-amber-400">
-                              OUT
-                            </span>
-                          )}
-                          {isIn && (
-                            <span className="shrink-0 inline-block rounded px-1.5 py-0.5 text-[9px] font-black uppercase font-mono bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 dark:text-emerald-400">
-                              IN
-                            </span>
-                          )}
-                          <TokenValueBadge value={tx.value} />
-                        </div>
+                        <TokenValueBadge
+                          value={tx.value}
+                          direction={isOut ? 'OUT' : isIn ? 'IN' : undefined}
+                        />
                       </td>
                       <td className="py-3.5 px-6">
                         <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 font-sans">

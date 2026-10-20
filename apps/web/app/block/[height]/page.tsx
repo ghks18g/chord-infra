@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { AddressBadge } from '../../../components/AddressBadge';
 import { TokenValueBadge } from '../../../components/TokenValueBadge';
+import { useAccount } from 'wagmi';
 
 interface BlockDetail {
   height: number;
@@ -35,6 +36,8 @@ export default function BlockDetailPage({
   params: Promise<{ height: string }>;
 }) {
   const router = useRouter();
+  const { address } = useAccount();
+  const myAddr = address?.toLowerCase();
   const resolvedParams = use(params);
   const height = resolvedParams.height;
 
@@ -298,7 +301,17 @@ export default function BlockDetailPage({
                       )}
                     </td>
                     <td className="py-2.5 px-3 text-right">
-                      <TokenValueBadge value={tx.value} className="justify-end" />
+                      <TokenValueBadge
+                        value={tx.value}
+                        direction={
+                          myAddr && tx.from.toLowerCase() === myAddr
+                            ? 'OUT'
+                            : myAddr && tx.to && tx.to.toLowerCase() === myAddr
+                            ? 'IN'
+                            : undefined
+                        }
+                        className="justify-end"
+                      />
                     </td>
                   </tr>
                 ))}
