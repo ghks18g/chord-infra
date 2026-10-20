@@ -64,9 +64,9 @@ jobs:
 
             # 4. Integrate with Caddy Reverse Proxy & Reload
             if [ -f "/opt/freddie-forge/Caddyfile" ]; then
-              echo "🔄 [CI/CD] Reloading Caddy with updated Scan API gateway..."
+              echo "🔄 [CI/CD] Reloading Caddy with updated Scan API gateway and flushing upstream cache..."
               sed -i 's/chordscan-indexer-api:3002/chordscan-scan-api:3002/g' /opt/freddie-forge/Caddyfile
-              docker exec freddie-forge-prod-caddy-1 caddy reload --config /etc/caddy/Caddyfile || true
+              docker restart freddie-forge-prod-caddy-1 || docker exec freddie-forge-prod-caddy-1 caddy reload --config /etc/caddy/Caddyfile --force || true
             fi
 
             # 5. Service healthchecks
