@@ -11,7 +11,8 @@ export default function ZkVisualizerPage() {
   const fetchProof = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`http://127.0.0.1:8545/prove_account?address=${address}`);
+      const rpcBase = process.env.NEXT_PUBLIC_RPC_URL || 'https://rpc.chordchain.space';
+      const res = await fetch(`${rpcBase}/prove_account?address=${address}`);
       const data = await res.json();
       setProof(data);
     } catch (e: any) {

@@ -15,6 +15,7 @@ import {
   Server,
   CheckCircle2,
   Coins,
+  BarChart2,
 } from 'lucide-react';
 
 export function Header() {
@@ -145,6 +146,18 @@ export function Header() {
                       <div className="text-[10px] text-slate-400 font-normal">4-Node BFT quorum</div>
                     </div>
                   </Link>
+
+                  <Link
+                    href="/statistics"
+                    onClick={() => setExploreOpen(false)}
+                    className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800/60"
+                  >
+                    <BarChart2 className="h-4 w-4 text-indigo-500 shrink-0" />
+                    <div>
+                      <div className="font-bold">Network Statistics</div>
+                      <div className="text-[10px] text-slate-400 font-normal">Throughput, Gas & SMT Metrics</div>
+                    </div>
+                  </Link>
                 </div>
               )}
             </div>
@@ -194,6 +207,18 @@ export function Header() {
                 </div>
               )}
             </div>
+
+            {/* Statistics Link */}
+            <Link
+              href="/statistics"
+              className={`rounded-lg px-3 py-1.5 transition ${
+                isActive('/statistics')
+                  ? 'bg-slate-100 text-sky-600 dark:bg-slate-800/80 dark:text-sky-400 font-bold'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
+              }`}
+            >
+              Statistics
+            </Link>
           </nav>
         </div>
 
@@ -271,6 +296,13 @@ export function Header() {
               className="block rounded-lg px-2 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
             >
               Validators
+            </Link>
+            <Link
+              href="/statistics"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block rounded-lg px-2 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+            >
+              Network Statistics
             </Link>
           </div>
           <div className="pl-3 space-y-1 border-l-2 border-slate-200 dark:border-slate-800 ml-1">
