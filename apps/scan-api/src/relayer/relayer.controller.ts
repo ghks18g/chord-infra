@@ -34,6 +34,8 @@ export class RelayerController {
     (process.env.CHORD_FORWARDER_ADDRESS || '0x34ec2B8950c43c126d8e7F57dD67d3F134Ea1933').toLowerCase(),
   );
 
+  private readonly rpcUrl = process.env.CHORD_RPC_URL || 'http://127.0.0.1:8545';
+
   constructor(
     @InjectQueue(RELAY_TX_QUEUE) private readonly relayQueue: Queue,
   ) {
@@ -46,7 +48,7 @@ export class RelayerController {
     });
   }
 
-  @Post('relay')
+  @Post(['relay', 'dispatch'])
   @HttpCode(HttpStatus.OK)
   async dispatchRelay(
     @Body() dto: RelayDispatchDTO,
@@ -85,7 +87,10 @@ export class RelayerController {
     if (wait !== 'false' && this.queueEvents) {
       try {
         const result = (await job.waitUntilFinished(this.queueEvents, 12000)) as RelayTxJobResult;
-        return result;
+        return {
+          ...result,
+          txHash: result.transactionHash,
+        };
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         this.logger.warn(`Job #${job.id} wait timed out or failed (${msg}), returning queued status`);
@@ -99,10 +104,68 @@ export class RelayerController {
     }
 
     return {
+      success: true,
       status: 'QUEUED',
       jobId: job.id,
       message: 'Relay transaction queued for execution',
     };
+  }
+
+  @Get('nonce/:address')
+  async getNonce(@Param('address') address: string) {
+    if (!ethers.isAddress(address)) {
+      throw new BadRequestException(`Invalid Ethereum address: ${address}`);
+    }
+
+    try {
+      const forwarderInterface = new ethers.Interface([
+        'function getNonce(address from) view returns (uint256)',
+      ]);
+      const data = forwarderInterface.encodeFunctionData('getNonce', [address]);
+
+      const res = await fetch(this.rpcUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          method: 'eth_call',
+          params: [
+            {
+              to: this.forwarderAddress,
+              data,
+            },
+            'latest',
+          ],
+          id: 1,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`RPC call failed with status ${res.status}`);
+      }
+
+      const json = await res.json();
+      if (json.error) {
+        throw new Error(`RPC call error: ${json.error.message}`);
+      }
+
+      const [nonceBn] = forwarderInterface.decodeFunctionResult('getNonce', json.result);
+      const nonce = Number(nonceBn);
+
+      return {
+        success: true,
+        address: ethers.getAddress(address),
+        nonce,
+      };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.warn(`Failed to fetch on-chain nonce for ${address}: ${msg}, defaulting to 0`);
+      return {
+        success: true,
+        address: ethers.getAddress(address),
+        nonce: 0,
+      };
+    }
   }
 
   @Get('status/:jobId')

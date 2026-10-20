@@ -129,7 +129,8 @@ export class RelayExecutionService {
         gasLimit = '0x7a120'; // 500,000 gas
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
-        this.logger.warn(`Failed to encode Forwarder calldata: ${msg}`);
+        this.logger.error(`Failed to encode Forwarder calldata: ${msg}`);
+        throw new BadRequestException(`Failed to encode ForwardRequest calldata: ${msg}`);
       }
     }
 
@@ -193,10 +194,17 @@ export class RelayExecutionService {
       data: data.data.startsWith('0x') ? data.data : `0x${data.data}`,
     };
 
+    const domain = {
+      ...this.domain,
+      verifyingContract: data.forwarderAddress
+        ? ethers.getAddress(data.forwarderAddress.toLowerCase())
+        : this.domain.verifyingContract,
+    };
+
     let recovered: string;
     try {
       recovered = ethers.verifyTypedData(
-        this.domain,
+        domain,
         EIP712_FORWARD_REQUEST_TYPES,
         value,
         data.signature,
