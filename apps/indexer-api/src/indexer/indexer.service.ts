@@ -163,13 +163,12 @@ export class IndexerService implements OnModuleInit {
 
     if (rpcHeight < latestIndexedHeight) {
       this.logger.warn(
-        `[Indexer] Node height (${rpcHeight}) < DB height (${latestIndexedHeight}). Chain reset detected! Resetting DB blocks...`,
+        `[Indexer] Node height (${rpcHeight}) < DB height (${latestIndexedHeight}). Waiting for node sync...`,
       );
-      await this.dataSource.query('TRUNCATE TABLE transactions, blocks CASCADE;');
-      latestIndexedHeight = 0;
+      return;
     }
 
-    const startHeight = totalBlocks === 0 ? 0 : latestIndexedHeight + 1;
+    const startHeight = totalBlocks === 0 ? 1 : latestIndexedHeight + 1;
     if (startHeight > rpcHeight) {
       return; // Already up to date
     }
