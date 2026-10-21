@@ -457,7 +457,7 @@ export class IndexerService implements OnModuleInit {
         }
 
         const isDeploy = !rpcTx?.to && (!receipt?.to || receipt?.contractAddress);
-        const contractAddr = receipt?.contractAddress || (isDeploy ? '0x4c219b464eb113f4d3c7ce0a438fb2e99f6b07b6' : null);
+        const contractAddr = receipt?.contractAddress || null;
 
         let valDec = '0';
         if (rpcTx?.value) {

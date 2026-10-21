@@ -39,7 +39,7 @@ export class IndexerHealthController {
       password: process.env.DATABASE_PASSWORD || 'chordpass',
       database: process.env.DATABASE_NAME || 'chordscan',
       entities: [Block, Transaction, Contract, ContractVerification, AddressTag, UserOperation],
-      synchronize: false,
+      synchronize: true,
     }),
     DatabaseModule,
     RedisModule.forRoot(),

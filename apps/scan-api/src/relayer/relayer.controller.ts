@@ -31,7 +31,7 @@ export class RelayerController {
   );
   private readonly chainId = Number(process.env.CHORD_CHAIN_ID || 7613);
   private readonly forwarderAddress = ethers.getAddress(
-    (process.env.CHORD_FORWARDER_ADDRESS || '0x34ec2B8950c43c126d8e7F57dD67d3F134Ea1933').toLowerCase(),
+    (process.env.CHORD_FORWARDER_ADDRESS || '0x34ec2b8950c43c126d8e7f57dd67d3f134ea1933').toLowerCase(),
   );
 
   private readonly rpcUrl = process.env.CHORD_RPC_URL || 'http://127.0.0.1:8545';

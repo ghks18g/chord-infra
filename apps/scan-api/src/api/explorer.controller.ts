@@ -364,10 +364,12 @@ export class ExplorerController {
     }
 
     const logs = receipt?.logs || [];
+    const faucetAddr = (process.env.CHORD_FAUCET_ADDRESS || process.env.FAUCET_ADDRESS || '0x4c219b464eb113f4d3c7ce0a438fb2e99f6b07b6').toLowerCase();
+    const forwarderAddr = (process.env.CHORD_FORWARDER_ADDRESS || process.env.FORWARDER_ADDRESS || '0x34ec2b8950c43c126d8e7f57dd67d3f134ea1933').toLowerCase();
     // EIP-2771 Meta-Transaction: Faucet claim forwarded via gas sponsor
     if (
       tx.to &&
-      tx.to.toLowerCase() === '0x4c219b464eb113f4d3c7ce0a438fb2e99f6b07b6' &&
+      tx.to.toLowerCase() === faucetAddr &&
       tx.data &&
       tx.data.toLowerCase().startsWith('0x4e71d92d')
     ) {
@@ -379,11 +381,11 @@ export class ExplorerController {
         );
         if (!hasForwarderExecuted) {
           logs.push({
-            address: '0x34ec2b8950c43c126d8e7f57dd67d3f134ea1933',
+            address: forwarderAddr,
             topics: [
               '0xd86b4c50733cb4dee05f54868a1f4fa6cf9347c09642e5496c23508a04cb79ff',
               '0x000000000000000000000000' + recipient.replace(/^0x/, ''),
-              '0x0000000000000000000000004c219b464eb113f4d3c7ce0a438fb2e99f6b07b6',
+              '0x000000000000000000000000' + faucetAddr.replace(/^0x/, ''),
             ],
             data: '0x000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000',
             blockNumber: tx.blockHeight,
@@ -525,7 +527,9 @@ export class ExplorerController {
     const internalTransactions: any[] = [];
     const tokenTransfers: any[] = [];
 
-    const faucetAddr = '0x4c219b464eb113f4d3c7ce0a438fb2e99f6b07b6';
+    const faucetAddr = (process.env.CHORD_FAUCET_ADDRESS || process.env.FAUCET_ADDRESS || '0x4c219b464eb113f4d3c7ce0a438fb2e99f6b07b6').toLowerCase();
+    const forwarderAddr = (process.env.CHORD_FORWARDER_ADDRESS || process.env.FORWARDER_ADDRESS || '0x34ec2b8950c43c126d8e7f57dd67d3f134ea1933').toLowerCase();
+    const cleanFaucetNoPrefix = faucetAddr.replace(/^0x/, '');
 
     for (const tx of candidateTxs) {
       const txTo = (tx.to || '').toLowerCase();
@@ -533,7 +537,6 @@ export class ExplorerController {
       const dataLower = (tx.data || '').toLowerCase();
 
       // 1. Check Faucet Claim Internal Native CHOR Transfers (Direct or EIP-712 Forwarder Gasless)
-      const forwarderAddr = '0x34ec2b8950c43c126d8e7f57dd67d3f134ea1933';
       let isFaucetClaim = false;
       let recipient = '';
 
@@ -547,7 +550,7 @@ export class ExplorerController {
         }
       } else if (
         txTo === forwarderAddr &&
-        dataLower.includes('4c219b464eb113f4d3c7ce0a438fb2e99f6b07b6') &&
+        dataLower.includes(cleanFaucetNoPrefix) &&
         dataLower.includes('4e71d92d')
       ) {
         isFaucetClaim = true;
@@ -751,10 +754,15 @@ export class ExplorerController {
 
     // Merge meta-transactions signed by or involving this address into recentTransactions
     const cleanAddr = address.toLowerCase().replace(/^0x/, '');
+    const forwarderAddr = (
+      process.env.CHORD_FORWARDER_ADDRESS ||
+      process.env.FORWARDER_ADDRESS ||
+      '0x34ec2b8950c43c126d8e7f57dd67d3f134ea1933'
+    ).toLowerCase();
     const metaTxs = candidateTxs.filter((ctx) => {
       const dataLower = (ctx.data || '').toLowerCase();
       return (
-        (ctx.to || '').toLowerCase() === '0x34ec2b8950c43c126d8e7f57dd67d3f134ea1933' &&
+        (ctx.to || '').toLowerCase() === forwarderAddr &&
         dataLower.includes(cleanAddr)
       );
     });

@@ -92,7 +92,7 @@ export class TransactionRepository {
 
   async findLatestFaucetClaim(recipient: string, entityManager?: EntityManager): Promise<Transaction | null> {
     const cleanAddr = recipient.toLowerCase().replace(/^0x/, '');
-    const faucetAddr = '0x4c219b464eb113f4d3c7ce0a438fb2e99f6b07b6';
+    const faucetAddr = (process.env.FAUCET_ADDRESS || '0x4c219b464eb113f4d3c7ce0a438fb2e99f6b07b6').toLowerCase();
 
     return this.repo(entityManager)
       .createQueryBuilder('tx')

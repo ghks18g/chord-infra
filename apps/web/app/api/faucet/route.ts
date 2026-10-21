@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const BACKEND_RPC_URL = process.env.CHORD_CORE_RPC_URL || 'http://127.0.0.1:8545';
-const FAUCET_ADDRESS = '0x4c219b464eb113f4d3c7ce0a438fb2e99f6b07b6';
+const FAUCET_ADDRESS = process.env.NEXT_PUBLIC_FAUCET_ADDRESS || '0x4c219b464eb113f4d3c7ce0a438fb2e99f6b07b6';
 
 export async function POST(req: NextRequest) {
   try {
