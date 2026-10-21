@@ -1,8 +1,29 @@
 import { Injectable, Logger, OnModuleInit, Inject } from '@nestjs/common';
 import { DataSource, EntityManager } from 'typeorm';
-import { BlockRepository, TransactionRepository, ContractRepository, AddressTagRepository } from '@chordscan/database';
+import {
+  BlockRepository,
+  TransactionRepository,
+  ContractRepository,
+  AddressTagRepository,
+  UserOperationRepository,
+  UserOperation,
+} from '@chordscan/database';
 import { REDIS_CLIENT, Redis } from '@chordscan/redis';
+import { AbiCoder } from 'ethers';
 import * as fs from 'fs';
+
+const USER_OP_TOPICS = [
+  '0x496286144a3fa0b6395488282998c6897f63a4963032fa7da333b5b10b719ae4',
+  '0x49628fd1471006c1482da88028e9ce4dbb080b815c9b0344d39e5a8e6ec1419f',
+];
+
+function cleanAddress(addr: string | null | undefined): string | null {
+  if (!addr) return null;
+  const clean = addr.toLowerCase().replace(/^0x/, '');
+  const hex40 = clean.length >= 40 ? clean.slice(-40) : clean.padStart(40, '0');
+  if (hex40 === '0'.repeat(40)) return null;
+  return '0x' + hex40;
+}
 
 function cleanHash(h: string): string {
   if (!h) return '0x' + '0'.repeat(64);
@@ -33,6 +54,7 @@ export class IndexerService implements OnModuleInit {
     private readonly txRepo: TransactionRepository,
     private readonly contractRepo: ContractRepository,
     private readonly tagRepo: AddressTagRepository,
+    private readonly userOpRepo: UserOperationRepository,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {}
 
@@ -75,6 +97,22 @@ export class IndexerService implements OnModuleInit {
           nameTag: 'Precompile: identity',
           category: 'Precompile',
           description: 'Identity data copy precompile',
+          source: 'system',
+          isOfficial: true,
+        },
+        {
+          address: '0x0000000000000000000000000000000000000100',
+          nameTag: 'Precompile: RIP-7212 (P256VERIFY)',
+          category: 'Precompile',
+          description: 'NIST P-256 (secp256r1) signature verification for WebAuthn/Passkey',
+          source: 'system',
+          isOfficial: true,
+        },
+        {
+          address: '0x0000000071727De22E5E9d8BAf0edAc6f37da032',
+          nameTag: 'EntryPoint v0.7',
+          category: 'Account Abstraction',
+          description: 'ERC-4337 Official EntryPoint v0.7 contract',
           source: 'system',
           isOfficial: true,
         },
@@ -152,6 +190,70 @@ export class IndexerService implements OnModuleInit {
     let savedBlockEntity: any = null;
     let savedTxEntities: any[] = [];
 
+    // Parse UserOperations (ERC-4337)
+    const userOpEntities: Partial<UserOperation>[] = [];
+    if (blockData.transactions && blockData.transactions.length > 0) {
+      for (const tx of blockData.transactions) {
+        if (Array.isArray(tx.logs)) {
+          for (const log of tx.logs) {
+            const topic0 = log?.topics?.[0]?.toLowerCase();
+            if (topic0 && USER_OP_TOPICS.includes(topic0) && log.topics.length >= 4) {
+              try {
+                const userOpHash = cleanHash(log.topics[1]);
+                const sender = cleanAddress(log.topics[2]) || '0x0000000000000000000000000000000000000000';
+                const paymaster = cleanAddress(log.topics[3]);
+                let nonce = '0';
+                let success = true;
+                let actualGasCost = '0';
+                let actualGasUsed = '0';
+
+                if (log.data && log.data !== '0x') {
+                  try {
+                    const decoded = AbiCoder.defaultAbiCoder().decode(
+                      ['uint256', 'bool', 'uint256', 'uint256'],
+                      log.data,
+                    );
+                    nonce = decoded[0].toString();
+                    success = Boolean(decoded[1]);
+                    actualGasCost = decoded[2].toString();
+                    actualGasUsed = decoded[3].toString();
+                  } catch {
+                    const dataHex = log.data.replace(/^0x/, '');
+                    if (dataHex.length >= 64) {
+                      nonce = BigInt('0x' + dataHex.slice(0, 64)).toString();
+                    }
+                    if (dataHex.length >= 128) {
+                      success = BigInt('0x' + dataHex.slice(64, 128)) !== 0n;
+                    }
+                    if (dataHex.length >= 192) {
+                      actualGasCost = BigInt('0x' + dataHex.slice(128, 192)).toString();
+                    }
+                    if (dataHex.length >= 256) {
+                      actualGasUsed = BigInt('0x' + dataHex.slice(192, 256)).toString();
+                    }
+                  }
+                }
+
+                userOpEntities.push({
+                  userOpHash,
+                  txHash: cleanHash(tx.hash),
+                  blockHeight: height,
+                  sender,
+                  paymaster,
+                  nonce,
+                  success,
+                  actualGasCost,
+                  actualGasUsed,
+                });
+              } catch (e: any) {
+                this.logger.warn(`[Indexer] Failed to parse UserOperation log: ${e.message}`);
+              }
+            }
+          }
+        }
+      }
+    }
+
     await this.dataSource.transaction(async (manager: EntityManager) => {
       // 1. 블록 메타데이터 삽입 (manager 전파)
       const savedBlock = await this.blockRepo.insertBlock(
@@ -218,7 +320,17 @@ export class IndexerService implements OnModuleInit {
       );
     });
 
-    // 4. Redis Pub/Sub 실시간 이벤트 발행 (scan-api 웹소켓 게이트웨이 연동)
+    // 4. UserOperation 비동기 안전 저장 (기존 파이프라인과 격리)
+    if (userOpEntities.length > 0) {
+      try {
+        await this.userOpRepo.insertUserOperations(userOpEntities);
+        this.logger.log(`[Indexer] Persisted ${userOpEntities.length} UserOperation(s) for block #${height}`);
+      } catch (err: any) {
+        this.logger.warn(`[Indexer] Failed to persist UserOperations: ${err.message}`);
+      }
+    }
+
+    // 5. Redis Pub/Sub 실시간 이벤트 발행 (scan-api 웹소켓 게이트웨이 연동)
     if (savedBlockEntity) {
       const blockTimestampIso =
         savedBlockEntity.timestamp instanceof Date
@@ -369,6 +481,7 @@ export class IndexerService implements OnModuleInit {
           value: valDec,
           data: rawData,
           nonce: rpcTx?.nonce ? parseInt(rpcTx.nonce, 16) : 0,
+          logs: receipt?.logs || [],
         });
       }
     }

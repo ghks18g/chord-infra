@@ -21,6 +21,7 @@ import {
   Layers,
   ArrowLeftRight,
   AlertCircle,
+  Cpu,
 } from 'lucide-react';
 import { AddressBadge } from '../../../components/AddressBadge';
 import { TokenValueBadge } from '../../../components/TokenValueBadge';
@@ -54,6 +55,7 @@ interface AddressData {
   internalTransactions?: any[];
   tokenTransfers?: any[];
   tokenHoldings?: TokenHolding[];
+  userOpCount?: number;
 }
 
 
@@ -209,7 +211,21 @@ export default function AddressDetailPage({
               <span className="font-mono text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 break-all">
                 {address}
               </span>
-              {!loading && <AddressBadge address={address} link={false} tagOnly={true} />}
+              {!loading && (
+                address.toLowerCase() === '0x0000000000000000000000000000000000000100' ? (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 font-sans border border-amber-500/20">
+                    <Cpu className="h-3 w-3" />
+                    Precompile: RIP-7212 (P256VERIFY)
+                  </span>
+                ) : address.toLowerCase() === '0x0000000071727de22e5e9d8baf0edac6f37da032' ? (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-violet-50 px-2 py-0.5 text-[11px] font-semibold text-violet-700 dark:bg-violet-950/60 dark:text-violet-400 font-sans border border-violet-500/20">
+                    <ShieldCheck className="h-3 w-3" />
+                    EntryPoint v0.7
+                  </span>
+                ) : (
+                  <AddressBadge address={address} link={false} tagOnly={true} />
+                )
+              )}
               <button
                 onClick={() => copyToClipboard(address, 'addr')}
                 className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
@@ -310,7 +326,27 @@ export default function AddressDetailPage({
           ) : (
             <>
               <div className="mt-2 flex items-center gap-2">
-                {data?.isContract ? (
+                {address.toLowerCase() === '0x0000000000000000000000000000000000000100' ? (
+                  <div className="flex flex-col gap-1.5">
+                    <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 self-start border border-amber-500/20">
+                      <Cpu className="h-4 w-4" />
+                      Precompile: RIP-7212 (P256VERIFY)
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      NIST P-256 (secp256r1) signature verification for WebAuthn/Passkey
+                    </span>
+                  </div>
+                ) : address.toLowerCase() === '0x0000000071727de22e5e9d8baf0edac6f37da032' ? (
+                  <div className="flex flex-col gap-1.5">
+                    <span className="inline-flex items-center gap-1.5 rounded-md bg-violet-50 px-2.5 py-1 text-xs font-bold text-violet-700 dark:bg-violet-950/60 dark:text-violet-400 self-start border border-violet-500/20">
+                      <ShieldCheck className="h-4 w-4" />
+                      EntryPoint v0.7
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      ERC-4337 Official EntryPoint v0.7 contract
+                    </span>
+                  </div>
+                ) : data?.isContract ? (
                   <span className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-bold ${
                     data?.contract?.isVerified
                       ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400'
@@ -330,7 +366,11 @@ export default function AddressDetailPage({
                 )}
               </div>
               <span className="text-[11px] text-slate-400 block mt-3">
-                {data?.isContract
+                {address.toLowerCase() === '0x0000000000000000000000000000000000000100'
+                  ? 'Official L1 Precompiled Contract'
+                  : address.toLowerCase() === '0x0000000071727de22e5e9d8baf0edac6f37da032'
+                  ? 'Canonical ERC-4337 Account Abstraction EntryPoint'
+                  : data?.isContract
                   ? data?.contract?.isVerified
                     ? 'Verified Source Code Available'
                     : 'Bytecode Deployed (Unverified)'

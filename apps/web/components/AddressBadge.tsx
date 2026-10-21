@@ -29,7 +29,18 @@ export function AddressBadge({
 
   if (!address) return <span className="text-slate-400 font-mono">-</span>;
 
-  const tag = getTag(address);
+  const knownTags: Record<string, { nameTag: string; category: string }> = {
+    '0x0000000000000000000000000000000000000100': {
+      nameTag: 'Precompile: RIP-7212 (P256VERIFY)',
+      category: 'Precompile',
+    },
+    '0x0000000071727de22e5e9d8baf0edac6f37da032': {
+      nameTag: 'EntryPoint v0.7',
+      category: 'Account Abstraction',
+    },
+  };
+
+  const tag = getTag(address) || knownTags[address.toLowerCase()];
   const isZero = address.toLowerCase() === '0x0000000000000000000000000000000000000000';
   const displayAddress = isZero
     ? 'Null: 0x000...000'
@@ -61,6 +72,14 @@ export function AddressBadge({
       return (
         <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 font-sans border border-amber-500/20">
           <Cpu className="h-3 w-3" />
+          {tag.nameTag}
+        </span>
+      );
+    }
+    if (cat === 'account abstraction') {
+      return (
+        <span className="inline-flex items-center gap-1 rounded-md bg-violet-50 px-2 py-0.5 text-[11px] font-semibold text-violet-700 dark:bg-violet-950/60 dark:text-violet-400 font-sans border border-violet-500/20">
+          <Shield className="h-3 w-3" />
           {tag.nameTag}
         </span>
       );

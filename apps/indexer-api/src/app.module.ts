@@ -7,6 +7,7 @@ import {
   Contract,
   ContractVerification,
   AddressTag,
+  UserOperation,
   BlockRepository,
 } from '@chordscan/database';
 import { RedisModule } from '@chordscan/redis';
@@ -37,7 +38,7 @@ export class IndexerHealthController {
       username: process.env.DATABASE_USER || 'chord',
       password: process.env.DATABASE_PASSWORD || 'chordpass',
       database: process.env.DATABASE_NAME || 'chordscan',
-      entities: [Block, Transaction, Contract, ContractVerification, AddressTag],
+      entities: [Block, Transaction, Contract, ContractVerification, AddressTag, UserOperation],
       synchronize: false,
     }),
     DatabaseModule,

@@ -6,6 +6,7 @@ import {
   TransactionRepository,
   ContractRepository,
   AddressTagRepository,
+  UserOperationRepository,
   Transaction,
 } from '@chordscan/database';
 import {
@@ -30,6 +31,7 @@ export class ExplorerController {
     private readonly txRepo: TransactionRepository,
     private readonly contractRepo: ContractRepository,
     private readonly tagRepo: AddressTagRepository,
+    private readonly userOpRepo: UserOperationRepository,
     @InjectQueue(CONTRACT_VERIFICATION_QUEUE)
     private readonly verificationQueue: Queue,
   ) {
@@ -474,6 +476,8 @@ export class ExplorerController {
       });
     }
 
+    const userOperations = await this.userOpRepo.findByTxHash(hash);
+
     return {
       ...tx,
       status: isFailed ? 'FAILED' : 'SUCCESS',
@@ -489,6 +493,7 @@ export class ExplorerController {
         : null,
       logs: enrichedLogs,
       gasUsed: receipt?.gasUsed ? parseInt(receipt.gasUsed, 16).toString() : null,
+      userOperations: userOperations || [],
     };
   }
 
@@ -811,6 +816,8 @@ export class ExplorerController {
       implementationContract = await this.contractRepo.findOneByAddress(contract.implementationAddress);
     }
 
+    const userOpCount = await this.userOpRepo.countByAddress(address);
+
     return {
       address,
       balance: liveBalance,
@@ -848,6 +855,7 @@ export class ExplorerController {
       internalTransactions,
       tokenTransfers,
       tokenHoldings,
+      userOpCount,
     };
   }
 

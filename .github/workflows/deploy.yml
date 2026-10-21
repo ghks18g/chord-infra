@@ -45,7 +45,16 @@ jobs:
             set -e
             echo "🚀 [CI/CD] Starting Chord-Infra deployment on VPS..."
             
-            # 1. Update chord-infra source
+            # 1. Update chord-go source
+            git config --global --add safe.directory /opt/chord/chord-go || true
+            if [ -d "/opt/chord/chord-go/.git" ]; then
+              cd /opt/chord/chord-go
+              git remote set-url origin https://github.com/ghks18g/chord-go.git 2>/dev/null || git remote add origin https://github.com/ghks18g/chord-go.git
+              git fetch origin main
+              git reset --hard origin/main
+            fi
+
+            # 2. Update chord-infra source
             git config --global --add safe.directory /opt/chord/chord-infra || true
             if [ -d "/opt/chord/chord-infra/.git" ]; then
               cd /opt/chord/chord-infra
@@ -59,9 +68,9 @@ jobs:
               cd /opt/chord/chord-infra
             fi
 
-            # 2. Rebuild and restart microservices orchestrator
+            # 3. Rebuild and restart microservices orchestrator & chord nodes
             cd /opt/chord/chord-go/deploy/prod
-            docker compose -f docker-compose.prod.yml up -d --build --remove-orphans redis scan-api indexer-api gas-relayer contract-verifier web
+            docker compose -f docker-compose.prod.yml up -d --build --remove-orphans node1 node2 node3 node4 redis scan-api indexer-api gas-relayer contract-verifier web
 
             # 3. Clean up legacy containers & dangling images
             docker image prune -f
