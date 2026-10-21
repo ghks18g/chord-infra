@@ -291,11 +291,8 @@ export function WalletConnect() {
                     className="inline-flex items-center gap-2 rounded-xl border border-sky-500/30 bg-sky-50/50 px-3 py-1.5 text-xs font-mono font-bold text-sky-700 hover:bg-sky-100/50 dark:border-sky-500/30 dark:bg-sky-950/40 dark:text-sky-300 dark:hover:bg-sky-900/40 transition cursor-pointer"
                   >
                     {displayBal ? (
-                      <span className="hidden md:inline text-slate-500 dark:text-slate-400 font-sans font-semibold flex items-center gap-1">
+                      <span className="hidden md:inline text-slate-500 dark:text-slate-400 font-sans font-semibold">
                         {displayBal}
-                        {isFetchingBalance && (
-                          <RefreshCw className="h-2.5 w-2.5 animate-spin text-sky-400 opacity-60" />
-                        )}
                       </span>
                     ) : null}
                     <span className="bg-sky-500/20 text-sky-600 dark:text-sky-400 px-1.5 py-0.5 rounded text-[11px]">
